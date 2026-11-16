@@ -4865,8 +4865,9 @@ class SingleControllerActor:
                         checkpoint_io, captured_snapshot.data_plane.release
                     )
 
-            # Canonical publication can resume while the retained TQ cut is saved.
-            # Checkpoint persistence still finishes before model save/publication.
+            # Canonical publication can resume while the retained TQ cut and its
+            # recovery state are saved, which still finishes before model
+            # save/publication.
             if captured_snapshot.data_plane is not None:
                 captured = await captured_snapshot.persist()
 
