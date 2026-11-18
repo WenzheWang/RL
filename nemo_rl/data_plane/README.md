@@ -829,7 +829,10 @@ persistence and all recovery sidecars finish. Backends without a retained view
 serialize and save inside the barrier, as before.
 
 The inventory checks list TQ keys through the patched controller's
-`nrl_list_keys`, which omits the per-key custom metadata that `KV_LIST` returns.
+`nrl_list_keys`, which omits the per-key custom metadata that `KV_LIST` returns,
+and do not sort them. Each cut lists the staging partition once: a rollout
+snapshot checks the paused environment's references and RL's against that one
+listing, inside the concurrent staging phase.
 
 Full trainer checkpoints use the same retained-view path when
 `checkpointing.save_data_plane: true`. Capture and validation run under the
@@ -866,7 +869,7 @@ The recovery checks and state are timed per phase:
 |---|---|---|
 | `replay_inventory_seconds` | Compare TQ replay keys with the replay index | Under the barrier |
 | `recovery_state_build_seconds` | Copy and validate the rollout-recovery ledger | Under the barrier |
-| `staging_inventory_seconds` | Compare TQ staging keys with recovery ownership | Under the barrier |
+| `staging_inventory_seconds` | List TQ staging keys once; check the environment's and recovery's references against them | Under the barrier |
 | `recovery_state_serialize_seconds` | `torch.save` and sha256 of that state | After resume with a retained view; under the barrier otherwise |
 
 The three barrier phases and `tq_capture_seconds` overlap, so the hold is close
