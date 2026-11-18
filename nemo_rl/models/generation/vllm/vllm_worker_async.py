@@ -54,7 +54,7 @@ from nemo_rl.data.captured_media import (
 )
 from nemo_rl.data_plane.adapters.tq_mooncake_checkpoint import run_checkpoint_command
 from nemo_rl.data_plane.interfaces import DataPlaneConfig
-from nemo_rl.models.generation.prefix_recovery.write_pipeline import PrefixWritesConfig
+from nemo_rl.models.generation.prefix_recovery.write_pipeline import PREFIX_WRITE_LIMITS
 from nemo_rl.data_plane.prefix_writer_actor import (
     RayPrefixWriterClient,
     create_prefix_writer,
@@ -902,7 +902,6 @@ class VllmAsyncGenerationWorkerImpl(
         prefix_write_max_rows: int,
         prefix_write_max_tokens: int,
         prefix_read_max_rows: int,
-        prefix_writes: PrefixWritesConfig,
     ) -> MediaColumnSpec | None:
         """Host ledger-authoritative token capture in this worker.
 
@@ -944,7 +943,6 @@ class VllmAsyncGenerationWorkerImpl(
             staging_partition=staging_partition,
             capture_media=capture_media,
             media_pixel_dtype=pixel_dtype,
-            direct_prefix_columns=prefix_writes.pipeline,
         )
         self._capture_top_logprobs = int(top_logprobs)
         if generation_prefix_cuts_enabled and not generation_cut_control_token:
@@ -1029,14 +1027,14 @@ class VllmAsyncGenerationWorkerImpl(
                     prefix_write_max_rows=prefix_write_max_rows,
                     prefix_write_max_tokens=prefix_write_max_tokens,
                     prefix_read_max_rows=prefix_read_max_rows,
-                    prefix_writes=prefix_writes,
+                    write_limits=PREFIX_WRITE_LIMITS,
                 ),
             )
-        if prefix_writes.writer_actor:
+        # Prefix PUTs go through a CPU writer actor on this node. A local data
+        # plane lives inside each process, so there the worker writes itself.
+        if generation_prefix_cuts_enabled and dp_cfg["impl"] == "transfer_queue":
             try:
-                writer = await create_prefix_writer(
-                    dp_cfg, partition_id=staging_partition
-                )
+                writer = await create_prefix_writer(dp_cfg)
             except BaseException:
                 self._prefix_recovery.shutdown()
                 raise

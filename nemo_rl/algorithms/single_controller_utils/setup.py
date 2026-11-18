@@ -1346,12 +1346,6 @@ def setup_single_controller(
         master_config.rollout_recovery.generation_prefix_cuts_enabled
     )
     if capture_media:
-        prefix_writes = master_config.rollout_recovery.prefix_writes
-        if prefix_writes.pipeline or prefix_writes.writer_actor:
-            raise ValueError(
-                "rollout_recovery.prefix_writes.pipeline and .writer_actor support "
-                "text-only token capture, not media"
-            )
         if not uses_image_placeholder(processor):
             raise ValueError(
                 "VLM token capture currently supports Omni dynamic images and native video"
@@ -2259,7 +2253,6 @@ def setup_single_controller(
                 master_config.rollout_recovery.prefix_write_max_tokens
             ),
             prefix_read_max_rows=master_config.rollout_recovery.prefix_read_max_rows,
-            prefix_writes=master_config.rollout_recovery.prefix_writes,
         )
         if capture_media and media_columns is None:
             raise RuntimeError(

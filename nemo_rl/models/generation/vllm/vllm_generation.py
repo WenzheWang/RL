@@ -94,9 +94,6 @@ if TYPE_CHECKING:
     from nemo_rl.data.captured_media import MediaColumnSpec
     from nemo_rl.data_plane.interfaces import DataPlaneConfig
     from nemo_rl.models.generation.dynamo.managed_runtime import ManagedDynamoRuntime
-    from nemo_rl.models.generation.prefix_recovery.write_pipeline import (
-        PrefixWritesConfig,
-    )
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +211,6 @@ class _TokenCaptureSetup:
     prefix_write_max_rows: int
     prefix_write_max_tokens: int
     prefix_read_max_rows: int
-    prefix_writes: "PrefixWritesConfig"
 
 
 class VllmGeneration(GenerationInterface):
@@ -853,7 +849,6 @@ class VllmGeneration(GenerationInterface):
         prefix_write_max_rows: int,
         prefix_write_max_tokens: int,
         prefix_read_max_rows: int,
-        prefix_writes: "PrefixWritesConfig",
     ) -> "Optional[MediaColumnSpec]":
         """Install ledger-authoritative token capture in every DP-leader worker.
 
@@ -879,7 +874,6 @@ class VllmGeneration(GenerationInterface):
             prefix_write_max_rows,
             prefix_write_max_tokens,
             prefix_read_max_rows,
-            prefix_writes,
         )
         futures = self.worker_group.run_all_workers_single_data(
             "setup_token_capture",

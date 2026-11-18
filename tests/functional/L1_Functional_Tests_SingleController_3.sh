@@ -81,10 +81,6 @@ run_test fast uv run --no-sync bash ./tests/functional/grpo_async_gym_single_con
 # Score centering with sampler replay: each cut also stages the sampler top-k,
 # and a resumed row trains with it (the settings of the H100 verification run).
 run_test uv run --no-sync bash ./tests/functional/grpo_async_gym_single_controller_prefix_recovery.sh ++policy.generation.top_logprobs=4 ++loss_fn.score_centering=true ++policy.generation.sampler_replay.enabled=true ++policy.generation.top_k=4
-# The same recovery with cut rows written by the prefix write pipeline (direct
-# column encoder) through the writer actor. Without sampler top-k, so the rows
-# take the direct encoder; the script checks that both started.
-run_test uv run --no-sync bash ./tests/functional/grpo_async_gym_single_controller_prefix_recovery.sh ++rollout_recovery.prefix_writes.pipeline=true ++rollout_recovery.prefix_writes.writer_actor=true
 # The same active-decode recovery with MoE router replay, on a tiny random MoE:
 # each restored call must stage the routes it restored for training.
 run_test fast uv run --no-sync bash ./tests/functional/grpo_router_replay_prefix_recovery_single_controller_1n2g.sh
